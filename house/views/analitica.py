@@ -55,36 +55,36 @@ class MonthlySaleListView(ListAPIView):
         )
 
 
-# @extend_schema(
-#     tags=['analitica'],
-#     request=ExelSerializer,
-# )
-# class SaleListView(APIView):
-#     permission_classes = [IsAuthenticated]
-#
-#     def post(self, request, *args, **kwargs):
-#         user = request.user
-#
-#         if not user.is_authenticated:
-#             return Response({"detail": "Foydalanuvchi tizimga kirmagan"}, status=401)
-#
-#         serializer = ExelSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         start_date = serializer.validated_data['start_date']
-#         end_date = serializer.validated_data['end_date']
-#
-#         warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
-#         if not warehouse_id:
-#             return Response({"detail": "Ombor aniqlanmadi"}, status=400)
-#
-#         products = OrderItem.objects.filter(
-#             created_at__gt=start_date,
-#             created_at__lt=end_date,
-#             warehouse_id=warehouse_id
-#         )
-#
-#         data = OrderItemSerializer(products, many=True).data
-#         return Response(data)
+@extend_schema(
+    tags=['analitica'],
+    request=ExelSerializer,
+)
+class SaleListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+
+        if not user.is_authenticated:
+            return Response({"detail": "Foydalanuvchi tizimga kirmagan"}, status=401)
+
+        serializer = ExelSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        start_date = serializer.validated_data['start_date']
+        end_date = serializer.validated_data['end_date']
+
+        warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
+        if not warehouse_id:
+            return Response({"detail": "Ombor aniqlanmadi"}, status=400)
+
+        products = OrderItem.objects.filter(
+            created_at__gt=start_date,
+            created_at__lt=end_date,
+            warehouse_id=warehouse_id
+        )
+
+        data = OrderItemSerializer(products, many=True).data
+        return Response(data)
 
 @extend_schema(
     tags=["analitica"], responses=AnaliticaSerializer)
@@ -116,7 +116,6 @@ class AnaliticaListView(APIView):
                 )
             )
         )['total'] or 0
-        profit_price = base_price - total_price
 
         return Response({
             "total_price": total_price,

@@ -2,12 +2,13 @@ import pandas as pd
 from django.core.cache import cache
 from django.http import HttpResponse
 from drf_spectacular.utils import extend_schema
-from openpyxl import Workbook
-from openpyxl.styles import PatternFill, Font
-from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.workbook import Workbook
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from django.core.cache import cache
 
 from house.models import Product
 
@@ -50,7 +51,14 @@ class ProductExcelExportView(APIView):
             df['kassa'] = df.apply(
                 lambda r: r['quantity'] * (r['discount_price'] if r['discount_price'] > 0 else r['price']), axis=1
             )
-        df = df.rename(columns={
+
+        # --- Guruhlashni rename qilishdan oldin ---
+        df_above = df[df['quantity'] > df['min_quantity']]  # yashil
+        df_between = df[(df['quantity'] > 0) & (df['quantity'] <= df['min_quantity'])]  # sariq
+        df_zero = df[df['quantity'] == 0]  # qizil
+
+        # --- Endi ustun nomlarini o‘zgartiramiz ---
+        rename_map = {
             'name': 'Nomi',
             'price': 'Narxi',
             'discount_price': 'Chegirma narxi',
@@ -59,18 +67,19 @@ class ProductExcelExportView(APIView):
             'min_quantity': 'Minimal miqdor',
             'investment': 'Xarajat',
             'kassa': 'Kassa'
-        })
+        }
 
-        # Uchta guruh
-        df_above = df[df['quantity'] > df['min_quantity']]  # yashil
-        df_between = df[(df['quantity'] > 0) & (df['quantity'] <= df['min_quantity'])]  # sariq
-        df_zero = df[df['quantity'] == 0]  # qizil
+        df = df.rename(columns=rename_map)
+        df_above = df_above.rename(columns=rename_map)
+        df_between = df_between.rename(columns=rename_map)
+        df_zero = df_zero.rename(columns=rename_map)
 
+        # --- Excel yozish ---
         wb = Workbook()
         ws = wb.active
         ws.title = "Products"
 
-        # 1) quantity > min_quantity --> yashil sarlavha
+        # 1) Miqdori > Minimal miqdor --> yashil sarlavha
         for row in dataframe_to_rows(df_above, index=False, header=True):
             ws.append(row)
 
@@ -84,7 +93,6 @@ class ProductExcelExportView(APIView):
         ws.append([])
         ws.append([])
 
-        # 2) 0 < quantity <= min_quantity --> sariq sarlavha
         start_row = ws.max_row + 1
         for r_idx, row in enumerate(dataframe_to_rows(df_between, index=False, header=True), start=start_row):
             for c_idx, value in enumerate(row, start=1):
@@ -97,7 +105,6 @@ class ProductExcelExportView(APIView):
         ws.append([])
         ws.append([])
 
-        # 3) quantity == 0 --> qizil sarlavha
         start_row = ws.max_row + 1
         for r_idx, row in enumerate(dataframe_to_rows(df_zero, index=False, header=True), start=start_row):
             for c_idx, value in enumerate(row, start=1):

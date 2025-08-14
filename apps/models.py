@@ -13,6 +13,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=100, choices=RoleStatus.choices, default=RoleStatus.USER)
     email = models.EmailField(unique=True)
     created_at = models.DateField(auto_now_add=True)
+    telegram_id = models.CharField(max_length=100)
     superuser_start_date = models.DateField(null=True, blank=True)
     superuser_end_date = models.DateField(null=True, blank=True)
 

@@ -1,9 +1,12 @@
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-
+import telebot
 from house.models import Order, OrderItem
 from apps.models import Warehouse
+import os
+
+TOKEN = "8190742485:AAFegJneL-ADaSOtbk56PUGu8zffj8IgwD0"
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

@@ -24,14 +24,20 @@ class ProductCreateApiView(CreateAPIView):
     def perform_create(self, serializer):
         user = self.request.user
         warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
-        if warehouse_id:
-            try:
-                warehouse = Warehouse.objects.get(id=warehouse_id)
-                serializer.save(warehouse=warehouse)
-            except Warehouse.DoesNotExist:
-                raise ValidationError({"warehouse": "Invalid warehouse id"})
-        else:
+        if not warehouse_id:
             raise ValidationError({"warehouse": "Warehouse id not found in cache"})
+
+        try:
+            warehouse = Warehouse.objects.get(id=warehouse_id)
+        except Warehouse.DoesNotExist:
+            raise ValidationError({"warehouse": "Invalid warehouse id"})
+
+        sku = serializer.validated_data.get("sku")
+
+        if Product.objects.filter(sku=sku, warehouse=warehouse).exists():
+            raise ValidationError({"detail": f"Mahsulot (sku={sku}) ushbu omborda allaqachon mavjud"})
+
+        serializer.save(warehouse=warehouse)
 
 
 @extend_schema(
