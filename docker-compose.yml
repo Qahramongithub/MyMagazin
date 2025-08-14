@@ -1,0 +1,55 @@
+services:
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      sh -c "
+      python3 manage.py wait_for_db &&
+      python3 manage.py makemigrations &&
+      python3 manage.py migrate &&
+      python3 manage.py runserver 0.0.0.0:8888"
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    expose:
+      - "8888"
+    ports:
+      - "8888:8888"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DEBUG=False
+      - DB_NAME=sklad
+      - DB_USER=postgres
+      - DB_PASSWORD=2505
+      - DB_HOST=db
+      - DB_PORT=5438
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_DB: sklad
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 2505
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5438:5432"
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+
+volumes:
+  static_volume:
+  media_volume:
+  postgres_data:
