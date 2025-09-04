@@ -86,6 +86,7 @@ class SaleListView(APIView):
         data = OrderItemSerializer(products, many=True).data
         return Response(data)
 
+
 @extend_schema(
     tags=["analitica"], responses=AnaliticaSerializer)
 class AnaliticaListView(APIView):
@@ -116,7 +117,7 @@ class AnaliticaListView(APIView):
                 )
             )
         )['total'] or 0
-
+        profit_price = total_price - base_price
         return Response({
             "total_price": total_price,
             "base_price": base_price,
