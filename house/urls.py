@@ -1,12 +1,15 @@
 from django.urls import path
 
-from house.views.analitica import DailySaleListView, MonthlySaleListView, AnaliticaListView, SaleListView
+from house.views.analitica import DailySaleListView, MonthlySaleListView, AnaliticaListView, SaleListView, \
+    ReportListView
 from house.views.category import CategoryCreateApiView, CategoryListApiView, CategoryDeleteApiView, \
     CategoryUpdateApiView
 from house.views.exel import ProductExcelExportView
 from house.views.order import OrderListCreateAPIView
 from house.views.product import ProductCreateApiView, ProductListApiView, FinishedProductListApiView, \
     LowProductListApiView, ProductUpdateApiView, ProductDeleteApiView
+from house.views.transactions import TransactionCreateApiView, TransactionUpdateApiView, \
+    TransactionListApiView
 
 urlpatterns = [
     path('category/create', CategoryCreateApiView.as_view()),
@@ -37,4 +40,14 @@ urlpatterns += [
     path('sale/', SaleListView.as_view()),
     path('analitica/', AnaliticaListView.as_view()),
     path('exel', ProductExcelExportView.as_view()),
+    path('report', ReportListView.as_view())
+
+]
+
+# ====================== TransactionCreateApiView ==========================
+urlpatterns += [
+    path('transaction/create', TransactionCreateApiView.as_view()),
+    # path('transaction/delete/<int:pk>', TransactionDeleteApiView.as_view()),
+    path('transaction/update/<int:pk>', TransactionUpdateApiView.as_view()),
+    path('transaction/lits', TransactionListApiView.as_view()),
 ]

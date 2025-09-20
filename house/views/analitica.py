@@ -1,5 +1,8 @@
+from calendar import month_name
+
 from django.core.cache import cache
-from django.db.models import Sum, Case, When, F, ExpressionWrapper, FloatField
+from django.db.models import Sum, Case, When, F, ExpressionWrapper, FloatField, Count
+from django.db.models.functions import ExtractYear, ExtractMonth
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -9,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.models import User
-from house.models import Product, OrderItem
+from house.models import Product, OrderItem, Transactions, Order
 from house.serializers.analitica import ExelSerializer, AnaliticaSerializer
 from house.serializers.order import OrderItemSerializer
 
@@ -58,6 +61,7 @@ class MonthlySaleListView(ListAPIView):
 @extend_schema(
     tags=['analitica'],
     request=ExelSerializer,
+    responses={200: OrderItemSerializer(many=True)}  # chiroyliroq
 )
 class SaleListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -78,13 +82,12 @@ class SaleListView(APIView):
             return Response({"detail": "Ombor aniqlanmadi"}, status=400)
 
         products = OrderItem.objects.filter(
-            created_at__gt=start_date,
-            created_at__lt=end_date,
+            created_at__gte=start_date,
+            created_at__lte=end_date,
             warehouse_id=warehouse_id
         )
 
-        data = OrderItemSerializer(products, many=True).data
-        return Response(data)
+        return Response(OrderItemSerializer(products, many=True).data)
 
 
 @extend_schema(
@@ -98,6 +101,7 @@ class AnaliticaListView(APIView):
             return Response({'message': 'You are not the superuser'}, status=status.HTTP_403_FORBIDDEN)
         warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
         products = Product.objects.filter(warehouse_id=warehouse_id)
+        transaction = Transactions.objects.filter(warehouse_id=warehouse_id)
         total_price = products.aggregate(
             total=Sum(
                 ExpressionWrapper(
@@ -117,9 +121,57 @@ class AnaliticaListView(APIView):
                 )
             )
         )['total'] or 0
-        profit_price = total_price - base_price
+        transaction_price = transaction.aggregate(
+            total=Sum(
+                Case(
+                    When(status='intro', then=F('price')),  # kirim bo‘lsa qo‘shiladi
+                    When(status='exit', then=-F('price')),  # chiqim bo‘lsa ayiriladi
+                    output_field=FloatField()
+                )
+            )
+        )['total'] or 0
+        profit_price = total_price - base_price + transaction_price
+
         return Response({
             "total_price": total_price,
             "base_price": base_price,
             "profit_price": profit_price,
         })
+
+
+@extend_schema(
+    tags=['analitica'],
+)
+class ReportListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        if user.role != User.RoleStatus.SUPERUSER:
+            return Response({'message': 'You are not the superuser'}, status=status.HTTP_403_FORBIDDEN)
+
+        warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
+
+        orders = (
+            Order.objects.filter(warehouse_id=warehouse_id)
+            .annotate(
+                year=ExtractYear('created_at'),  # created_at – order yaratilgan vaqti
+                month=ExtractMonth('created_at')
+            )
+            .values('year', 'month')
+            .annotate(
+                count=Count('id'),
+            )
+            .order_by('year', 'month')
+        )
+
+        # JSON uchun oy nomlarini qo‘shamiz
+        data = []
+        for o in orders:
+            data.append({
+                "year": o['year'],
+                "month": month_name[o['month']],  # raqamdan nomga
+                "count": o['count'],
+            })
+
+        return Response(data, status=status.HTTP_200_OK)

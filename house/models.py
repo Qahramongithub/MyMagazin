@@ -2,6 +2,8 @@ from django.db import models
 
 from apps.models import Warehouse
 
+from django.utils.translation import gettext as _
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -94,3 +96,15 @@ class ProductTransfer(models.Model):
         ordering = ['-transferred_at']
         verbose_name = "Product Transfer"
         verbose_name_plural = "Product Transfers"
+
+
+class Transactions(models.Model):
+    class Status(models.TextChoices):
+        INTRO = "intro", _("Intro")
+        EXIT = "exit", _("Exit")
+
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.INTRO)
+    created_at = models.DateTimeField(auto_now_add=True)
+    warehouse = models.ForeignKey('apps.Warehouse', on_delete=models.CASCADE, related_name='transactions')

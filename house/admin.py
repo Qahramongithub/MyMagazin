@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from house.models import Category, Product, Order, OrderItem, ProductTransfer
+from house.models import Category, Product, Order, OrderItem, ProductTransfer, Transactions
 
 
 @admin.register(Category)
@@ -90,3 +90,8 @@ class ProductTransferAdmin(admin.ModelAdmin):
     list_display = ('product', 'quantity', 'from_warehouse', 'to_warehouse', 'transferred_at')
     list_filter = ('from_warehouse', 'to_warehouse', 'product', 'transferred_at')
     search_fields = ('product__name',)
+
+
+@admin.register(Transactions)
+class TransactionsAdmin(admin.ModelAdmin):
+    list_display = ('id', 'created_at', 'status', 'price',)
