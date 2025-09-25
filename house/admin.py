@@ -66,6 +66,7 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('id', 'created_at')
     inlines = [OrderItemInline]
+    list_filter = ('warehouse',)
 
     def save_formset(self, request, form, formset, change):
         # Avval saqlab olamiz
@@ -95,3 +96,4 @@ class ProductTransferAdmin(admin.ModelAdmin):
 @admin.register(Transactions)
 class TransactionsAdmin(admin.ModelAdmin):
     list_display = ('id', 'created_at', 'status', 'price',)
+    list_filter = ('warehouse',)

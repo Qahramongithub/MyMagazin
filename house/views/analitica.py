@@ -141,6 +141,7 @@ class AnaliticaListView(APIView):
 
 @extend_schema(
     tags=['analitica'],
+    exclude=True
 )
 class ReportListView(APIView):
     permission_classes = [IsAuthenticated]

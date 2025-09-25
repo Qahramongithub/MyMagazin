@@ -9,7 +9,7 @@ from house.views.order import OrderListCreateAPIView
 from house.views.product import ProductCreateApiView, ProductListApiView, FinishedProductListApiView, \
     LowProductListApiView, ProductUpdateApiView, ProductDeleteApiView
 from house.views.transactions import TransactionCreateApiView, TransactionUpdateApiView, \
-    TransactionListApiView
+    TransactionListApiView, TransactionDeleteApiView
 
 urlpatterns = [
     path('category/create', CategoryCreateApiView.as_view()),
@@ -47,7 +47,7 @@ urlpatterns += [
 # ====================== TransactionCreateApiView ==========================
 urlpatterns += [
     path('transaction/create', TransactionCreateApiView.as_view()),
-    # path('transaction/delete/<int:pk>', TransactionDeleteApiView.as_view()),
+    path('transaction/delete/<int:pk>', TransactionDeleteApiView.as_view()),
     path('transaction/update/<int:pk>', TransactionUpdateApiView.as_view()),
     path('transaction/lits', TransactionListApiView.as_view()),
 ]

@@ -1,11 +1,13 @@
 from django.core.exceptions import ValidationError
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, DestroyAPIView
 from django.core.cache import cache
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.models import User
 from house.models import Transactions
 from house.serializers.transaction import TransactionModelSerializer
 
@@ -23,6 +25,9 @@ class TransactionCreateApiView(CreateAPIView):
     def perform_create(self, serializer):
         user = self.request.user
         warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
+        user = User.objects.get(id=user.id)
+        if user.role != User.RoleStatus.SUPERUSER:
+            raise PermissionDenied("You are not allowed to create transactions", status.HTTP_403_FORBIDDEN)
         if not warehouse_id:
             raise ValidationError({"warehouse": "Warehouse id not found in cache"})
         serializer.save(warehouse_id=warehouse_id)
@@ -42,6 +47,9 @@ class TransactionListApiView(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
+        user = User.objects.get(id=user.id)
+        if user.role != User.RoleStatus.SUPERUSER:
+            raise PermissionDenied("You are not allowed to create transactions", status.HTTP_403_FORBIDDEN)
         if warehouse_id is None:
             raise ValidationError({"warehouse": "Warehouse id not found in cache"})
         return Transactions.objects.filter(warehouse_id=warehouse_id).order_by("-created_at")
@@ -65,6 +73,8 @@ class TransactionUpdateApiView(UpdateAPIView):
 
         user = request.user
         warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
+        if user.role != User.RoleStatus.SUPERUSER:
+            raise PermissionDenied("You are not allowed to update transactions", status.HTTP_403_FORBIDDEN)
         if not warehouse_id:
             raise ValidationError({"warehouse": "Warehouse id not found in cache"})
 
@@ -72,4 +82,15 @@ class TransactionUpdateApiView(UpdateAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class TransactionDeleteApiView(DestroyAPIView):
+    queryset = Transactions.objects.all()
+    serializer_class = TransactionModelSerializer
 
+    def delete(self, request, *args, **kwargs):
+        user = self.request.user
+        warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
+        user = User.objects.get(id=user.id)
+        if user.role != User.RoleStatus.SUPERUSER:
+            raise PermissionDenied("You are not allowed to delete transactions", status.HTTP_403_FORBIDDEN)
+        Transactions.objects.filter(warehouse_id=warehouse_id).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

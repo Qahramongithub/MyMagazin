@@ -12,7 +12,10 @@ urlpatterns = ([
     path('', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/', include('apps.urls')),
     path('house/', include('house.urls')),
-]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
- +static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT))
+])
+
+if not settings.DEBUG:
+    (urlpatterns + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT))
 handler404 = 'apps.views.errors.handler404'
 handler500 = 'apps.views.errors.handler500'

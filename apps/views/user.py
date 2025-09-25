@@ -14,6 +14,7 @@ from apps.serializers.user import PasswordSerializer
 )
 class Password(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = PasswordSerializer
 
     def post(self, request):
         serializer = PasswordSerializer(data=request.data)

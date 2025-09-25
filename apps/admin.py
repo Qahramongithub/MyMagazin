@@ -1,37 +1,26 @@
 from django.contrib import admin
-from django.contrib.admin.widgets import AdminDateWidget
 from rangefilter.filters import DateRangeFilter
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
-from apps.models import User, Warehouse
-from django.db import models
+from apps.models import Warehouse
 
 
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'role', 'created_at', 'superuser_start_date', 'superuser_end_date')
-    list_filter = (
-        ('superuser_start_date', DateRangeFilter), ('superuser_end_date', DateRangeFilter),
-        'role', 'username'
-    )
-    formfield_overrides = {
-        models.DateField: {'widget': AdminDateWidget},
-    }
-    search_fields = ('username', 'email')
-    ordering = ('username',)
-    fieldsets = (
-        (None, {'fields': ('username', 'password', 'email', 'role', 'superuser_start_date', 'superuser_end_date')}),
-        ('Status', {'fields': ('is_active',)}),
-    )
-
-    def save_model(self, request, obj, form, change):
-        """
-        Faqat yangi user yaratilsa yoki mavjud user paroli o‘zgartirilsa,
-        passwordni hash qilish.
-        """
-        if not change or 'password' in form.changed_data:
-            obj.set_password(obj.password)
-        super().save_model(request, obj, form, change)
+# @admin.register(User)
+# class UserAdmin(admin.ModelAdmin):
+#     list_display = ('username', 'email', 'role', 'created_at', 'superuser_start_date', 'superuser_end_date')
+#     list_filter = (
+#         ('superuser_start_date', DateRangeFilter), ('superuser_end_date', DateRangeFilter),
+#         'role', 'username'
+#     )
+#     formfield_overrides = {
+#         models.DateField: {'widget': AdminDateWidget},
+#     }
+#     search_fields = ('username', 'email')
+#     ordering = ('username',)
+#     fieldsets = (
+#         (None, {'fields': ('username', 'email', 'role', 'superuser_start_date', 'superuser_end_date')}),
+#         ('Status', {'fields': ('is_active',)}),
+#     )
 
 
 @admin.register(Warehouse)
@@ -54,3 +43,29 @@ admin.site.unregister(Group)
 
 admin.site.unregister(BlacklistedToken)
 admin.site.unregister(OutstandingToken)
+
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from .forms import CustomUserCreationForm, CustomUserChangeForm
+from .models import User  # yoki CustomUser
+
+
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    add_form = CustomUserCreationForm
+    form = CustomUserChangeForm
+    model = User
+    list_display = ("username", "is_staff", "is_active", "role", "superuser_start_date", "superuser_end_date")
+    list_filter = ("is_staff", "is_active")
+    fieldsets = (
+        (None, {"fields": ("username", "password", "role", "superuser_start_date", "superuser_end_date")}),
+        ("Permissions", {"fields": ("is_active",)}),
+    )
+    add_fieldsets = (
+        (None, {
+            "classes": ("wide",),
+            "fields": ("username", "password1", "password2", "is_staff", "is_active", "groups", "user_permissions"),
+        }),
+    )
+    search_fields = ("username",)
+    ordering = ("username",)
