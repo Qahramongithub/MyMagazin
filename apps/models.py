@@ -11,9 +11,9 @@ class User(AbstractUser):
     username = models.CharField(max_length=100, unique=True)
     password = models.CharField(max_length=100)
     role = models.CharField(max_length=100, choices=RoleStatus.choices, default=RoleStatus.USER)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, null=True, blank=True)
     created_at = models.DateField(auto_now_add=True)
-    telegram_id = models.CharField(max_length=100)
+    telegram_id = models.CharField(max_length=100, null=True, blank=True)
     superuser_start_date = models.DateField(null=True, blank=True)
     superuser_end_date = models.DateField(null=True, blank=True)
 
@@ -30,6 +30,7 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
 
 class Warehouse(models.Model):
     location = models.CharField(max_length=100)
