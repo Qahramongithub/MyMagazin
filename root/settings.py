@@ -65,7 +65,7 @@ DATABASES = {
         'NAME': 'sklad',  # PostgreSQL'dagi bazangiz nomi
         'USER': 'postgres',  # Foydalanuvchi nomi
         'PASSWORD': '2505',  # Parol
-        'HOST': 'localhost',  # Yoki Docker konteyner nomi (masalan: 'db')
+        'HOST': 'db',  # Yoki Docker konteyner nomi (masalan: 'db')
         'PORT': '5432',
     }
 }
@@ -85,7 +85,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = 'en'  # asosiy til
+LANGUAGE_CODE = 'en'
 USE_I18N = True
 USE_L10N = True
 
