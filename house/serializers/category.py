@@ -43,3 +43,5 @@ class CategorySerializer(serializers.ModelSerializer):
                 status.HTTP_401_UNAUTHORIZED
             })
         return Category.objects.filter(id=instance.id).delete()
+
+

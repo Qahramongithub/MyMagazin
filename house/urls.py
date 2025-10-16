@@ -3,7 +3,7 @@ from django.urls import path
 from house.views.analitica import DailySaleListView, MonthlySaleListView, AnaliticaListView, SaleListView, \
     ReportListView
 from house.views.category import CategoryCreateApiView, CategoryListApiView, CategoryDeleteApiView, \
-    CategoryUpdateApiView
+    CategoryUpdateApiView, CategorySearchApiView
 from house.views.exel import ProductExcelExportView
 from house.views.order import OrderListCreateAPIView
 from house.views.product import ProductCreateApiView, ProductListApiView, FinishedProductListApiView, \
@@ -16,6 +16,7 @@ urlpatterns = [
     path('category/list', CategoryListApiView.as_view()),
     path('category/delete/<int:pk>', CategoryDeleteApiView.as_view()),
     path('category/update/<int:pk>', CategoryUpdateApiView.as_view()),
+    path('category/search/', CategorySearchApiView.as_view()),
 ]
 
 # ====================     Product ================================

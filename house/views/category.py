@@ -1,6 +1,6 @@
 from django.core.cache import cache
-from drf_spectacular.utils import extend_schema, OpenApiResponse
-from rest_framework import status
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
+from rest_framework import status, generics
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import CreateAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -21,8 +21,8 @@ class CategoryCreateApiView(CreateAPIView):
     def perform_create(self, serializer):
         user = self.request.user
 
-        if user.role != User.RoleStatus.SUPERUSER:
-            raise PermissionDenied("Sizda ruxsat yo'q")  # <-- mana bu to'g'ri
+        if self.request.user.role != User.RoleStatus.SUPERUSER:
+            raise PermissionDenied("Sizda ruxsat yo'q", status.HTTP_403_FORBIDDEN)  # <-- mana bu to'g'ri
 
         serializer.save()
 
@@ -38,7 +38,6 @@ class CategoryListApiView(APIView):
     def get(self, request):
         user = request.user
         warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
-
         if not user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
@@ -77,7 +76,7 @@ class CategoryUpdateApiView(UpdateAPIView):
     def update(self, request, *args, **kwargs):
         user = self.request.user
 
-        if user.role != user.RoleStatus.SUPERUSER:
+        if request.user.role != User.RoleStatus.SUPERUSER:
             return Response({"detail": "Sizda ruxsat yo'q"}, status=status.HTTP_403_FORBIDDEN)
 
         partial = kwargs.pop('partial', False)
@@ -90,3 +89,35 @@ class CategoryUpdateApiView(UpdateAPIView):
             "detail": "Kategoriya o'zgartirildi",
             "data": serializer.data
         }, status.HTTP_200_OK)
+
+
+@extend_schema(
+    tags=['category'],
+    parameters=[
+        OpenApiParameter(
+            name='search',
+            description='Kategoriya nomi bo‘yicha qidiruv (masalan: ?search=kitob)',
+            required=False,
+            type=str,
+        ),
+    ],
+    responses={200: CategorySerializer(many=True)}
+)
+class CategorySearchApiView(APIView):
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
+        categories = Category.objects.filter(warehouse_id=warehouse_id)
+
+        # GET orqali qidiruv so‘zi olish
+        search = request.GET.get('search', '').strip()
+
+        if search:
+            queryset = categories.filter(name__icontains=search)
+        else:
+            queryset = categories
+        serializer = CategorySerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

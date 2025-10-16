@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-n6b_hcns@!4-^7^_az2!b7au9&i^dfa-e#=-h4q%@#4p3m_bf&'
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost','127.0.0.1']
 AUTH_USER_MODEL = 'apps.User'
@@ -65,7 +65,7 @@ DATABASES = {
         'NAME': 'sklad',  # PostgreSQL'dagi bazangiz nomi
         'USER': 'postgres',  # Foydalanuvchi nomi
         'PASSWORD': '2505',  # Parol
-        'HOST': 'db',  # Yoki Docker konteyner nomi (masalan: 'db')
+        'HOST': 'localhost',  # Yoki Docker konteyner nomi (masalan: 'db')
         'PORT': '5432',
     }
 }
