@@ -27,3 +27,11 @@ class Password(APIView):
         user.save()
 
         return Response({"success": "Password updated successfully"}, status=status.HTTP_200_OK)
+
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+from apps.serializers.user import MyTokenObtainPairSerializer
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer

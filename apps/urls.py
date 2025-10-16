@@ -8,7 +8,7 @@ from rest_framework_simplejwt.views import (
 from apps.views.branch import BulkTransferAPIView, BranchListApiView
 from apps.views.company import CompanyStatusAPIView
 from apps.views.language import ChangeLanguageAPIView
-from apps.views.user import Password
+from apps.views.user import Password, MyTokenObtainPairView
 from apps.views.warehouse import (
     WarehouseCreateApiView,
     WarehouseListApiView,
@@ -16,7 +16,7 @@ from apps.views.warehouse import (
 )
 
 urlpatterns = [
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
     path('api/company/password/', Password.as_view(), name='password'),
