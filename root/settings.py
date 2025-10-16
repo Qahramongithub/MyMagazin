@@ -7,7 +7,7 @@ SECRET_KEY = 'django-insecure-n6b_hcns@!4-^7^_az2!b7au9&i^dfa-e#=-h4q%@#4p3m_bf&
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['156.67.27.60']
+ALLOWED_HOSTS = ['156.67.27.60', 'localhost']
 
 AUTH_USER_MODEL = 'apps.User'
 INSTALLED_APPS = [
@@ -26,14 +26,20 @@ INSTALLED_APPS = [
     'house',
     'rangefilter',
     'psycopg2',
-    'core'
+    'core',
+    'corsheaders'
 
 ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+CORS_ALLOW_ALL_ORIGINS = True
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
