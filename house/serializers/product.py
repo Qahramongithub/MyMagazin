@@ -1,9 +1,15 @@
 from rest_framework import serializers
 
-from house.models import Product
+from house.models import Product, Category
 
 
 class ProductModelSerializer(serializers.ModelSerializer):
+    categories = serializers.SlugRelatedField(
+        slug_field='name',
+        queryset=Category.objects.all()
+    )
+    status = serializers.ReadOnlyField()
+
     class Meta:
         model = Product
         fields = '__all__'

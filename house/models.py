@@ -57,6 +57,15 @@ class Product(models.Model):
             return self.quantity * self.discount_price
         return self.quantity * self.price
 
+    @property
+    def status(self) -> str:
+        if self.quantity == 0:
+            return "Tugagan"
+        elif self.quantity < self.min_quantity:
+            return "Kam qolgan"
+        else:
+            return "Yaxshi"
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey('Order', on_delete=models.CASCADE)
