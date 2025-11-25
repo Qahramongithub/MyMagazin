@@ -140,39 +140,55 @@ class AnaliticaListView(APIView):
 
 
 @extend_schema(
-    tags=['analitica'],
-    exclude=True
-)
+    tags=["analitica"], )
 class ReportListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         user = request.user
         if user.role != User.RoleStatus.SUPERUSER:
-            return Response({'message': 'You are not the superuser'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'message': 'You are not the superuser'}, status=403)
 
         warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
 
-        orders = (
-            Order.objects.filter(warehouse_id=warehouse_id)
+        order_items = (
+            OrderItem.objects
+            .filter(order__warehouse_id=warehouse_id)
             .annotate(
-                year=ExtractYear('created_at'),  # created_at – order yaratilgan vaqti
-                month=ExtractMonth('created_at')
+                year=ExtractYear('order__created_at'),
+                month=ExtractMonth('order__created_at'),
+                final_price=ExpressionWrapper(
+                    Case(
+                        When(product__discount_price__gt=0, then=F('product__discount_price')),
+                        default=F('product__price')
+                    ) * F('quantity'),
+                    output_field=FloatField()
+                ),
+                base_calc=ExpressionWrapper(
+                    F('product__base_price') * F('quantity'),
+                    output_field=FloatField()
+                )
             )
             .values('year', 'month')
             .annotate(
-                count=Count('id'),
+                total_price=Sum('final_price'),
+                base_price=Sum('base_calc'),
             )
             .order_by('year', 'month')
         )
 
-        # JSON uchun oy nomlarini qo‘shamiz
-        data = []
-        for o in orders:
-            data.append({
-                "year": o['year'],
-                "month": month_name[o['month']],  # raqamdan nomga
-                "count": o['count'],
+        final_data = []
+        for item in order_items:
+            total_price = item.get('total_price') or 0
+            base_price = item.get('base_price') or 0
+            profit = base_price - total_price  # foyda
+
+            final_data.append({
+                "year": item.get('year'),
+                "month": item.get('month'),
+                "total_price": total_price,
+                "base_price": base_price,
+                "profit_price": profit
             })
 
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(final_data)

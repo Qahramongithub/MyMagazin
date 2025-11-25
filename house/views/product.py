@@ -5,8 +5,10 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.generics import CreateAPIView, UpdateAPIView, DestroyAPIView, ListAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 
 from apps.models import Warehouse
+from apps.serializers import user
 from house.models import Product
 from house.serializers.product import ProductModelSerializer
 
@@ -118,3 +120,14 @@ class LowProductListApiView(ListAPIView):
             quantity__lt=F('min_quantity'),
             quantity__gt=0,
         )
+
+
+class ProductSkuListApiView(ListAPIView):
+    serializer_class = ProductModelSerializer
+
+    def get_queryset(self):
+        sku = self.kwargs['sku']
+        user = self.request.user
+        warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
+
+        return Product.objects.filter(sku=sku, warehouse_id=warehouse_id).all()

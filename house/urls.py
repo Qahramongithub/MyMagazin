@@ -1,13 +1,13 @@
 from django.urls import path
 
-from house.views.analitica import DailySaleListView, MonthlySaleListView, AnaliticaListView, SaleListView, \
-    ReportListView
+from house.views.analitica import DailySaleListView, MonthlySaleListView, SaleListView, \
+    ReportListView,  AnaliticaListView
 from house.views.category import CategoryCreateApiView, CategoryListApiView, CategoryDeleteApiView, \
     CategoryUpdateApiView, CategorySearchApiView
 from house.views.exel import ProductExcelExportView
 from house.views.order import OrderListCreateAPIView
 from house.views.product import ProductCreateApiView, ProductListApiView, FinishedProductListApiView, \
-    LowProductListApiView, ProductUpdateApiView, ProductDeleteApiView
+    LowProductListApiView, ProductUpdateApiView, ProductDeleteApiView, ProductSkuListApiView
 from house.views.transactions import TransactionCreateApiView, TransactionUpdateApiView, \
     TransactionListApiView, TransactionDeleteApiView
 
@@ -27,7 +27,7 @@ urlpatterns += [
     path('product/list', ProductListApiView.as_view()),
     path('product/finish', FinishedProductListApiView.as_view()),
     path('product/low', LowProductListApiView.as_view()),
-    # path('product/sku/<str:sku>', ProductSkuListApiView.as_view()),
+    path('product/sku/<str:sku>', ProductSkuListApiView.as_view()),
 ]
 
 # ======================       Order ================================
@@ -39,9 +39,10 @@ urlpatterns += [
     path('daily/', DailySaleListView.as_view()),
     path('monthly', MonthlySaleListView.as_view()),
     path('sale/', SaleListView.as_view()),
-    path('analitica/', AnaliticaListView.as_view()),
     path('exel', ProductExcelExportView.as_view()),
-    path('report', ReportListView.as_view())
+    path('report', ReportListView.as_view()),
+    path('analitica/', AnaliticaListView.as_view()),
+    # path('statistic/', Statistic.as_view()),
 
 ]
 
