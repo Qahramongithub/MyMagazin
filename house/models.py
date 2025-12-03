@@ -112,6 +112,8 @@ class Transactions(models.Model):
         INTRO = "intro", _("Intro")
         EXIT = "exit", _("Exit")
 
+    name = models.CharField(max_length=100, null=True, blank=True)
+    category = models.CharField(max_length=100, null=True, blank=True)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.INTRO)

@@ -143,6 +143,8 @@ class AnaliticaListView(APIView):
     tags=["analitica"], )
 class ReportListView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = None
+
 
     def get(self, request, *args, **kwargs):
         user = request.user
