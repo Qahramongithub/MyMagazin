@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -6,14 +8,12 @@ from house.models import Order, OrderItem
 from apps.models import Warehouse
 import os
 
-TOKEN = "8190742485:AAFegJneL-ADaSOtbk56PUGu8zffj8IgwD0"
-
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
     product_unit = serializers.CharField(source='product.unit', read_only=True)
-    price = serializers.FloatField(source='product.price', read_only=True)
-    discount_price = serializers.FloatField(source='product.discount_price', read_only=True)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    discount_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = OrderItem
@@ -32,7 +32,6 @@ class OrderSerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('orderitem_set')
         user = self.context['request'].user
 
-        # Warehouse ID ni cache dan olamiz
         warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
         if not warehouse_id:
             raise serializers.ValidationError("Warehouse ID topilmadi. Iltimos, user uchun keshni tekshiring.")
@@ -51,11 +50,21 @@ class OrderSerializer(serializers.ModelSerializer):
                     f"{product.name} mahsuloti uchun yetarli quantity ({product.quantity}) mavjud emas."
                 )
 
-            # 🔑 OrderItem yarat
+            item_data['base_price'] = product.base_price
+            item_data['price'] = product.discount_price if product.discount_price > 0 else product.price
+
             OrderItem.objects.create(order=order, **item_data)
 
-            # 🔑 Product quantity ni kamaytir
             product.quantity -= quantity
             product.save(update_fields=['quantity'])
 
         return order
+
+
+class OrderExelSerializer(serializers.ModelSerializer):
+    start_date = serializers.DateTimeField(source='created_at', read_only=True)
+    end_date = serializers.DateTimeField(source='created_at', read_only=True)
+
+    class Meta:
+        model = Order
+        fields = '__all__'

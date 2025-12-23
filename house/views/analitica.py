@@ -1,7 +1,8 @@
-from calendar import month_name
+from decimal import Decimal
 
 from django.core.cache import cache
-from django.db.models import Sum, Case, When, F, ExpressionWrapper, FloatField, Count
+from django.db.models import DecimalField
+from django.db.models import Sum, Case, When, F, ExpressionWrapper, FloatField
 from django.db.models.functions import ExtractYear, ExtractMonth
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
@@ -12,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.models import User
-from house.models import Product, OrderItem, Transactions, Order
+from house.models import Product, OrderItem, Transactions
 from house.serializers.analitica import ExelSerializer, AnaliticaSerializer
 from house.serializers.order import OrderItemSerializer
 
@@ -101,7 +102,6 @@ class AnaliticaListView(APIView):
             return Response({'message': 'You are not the superuser'}, status=status.HTTP_403_FORBIDDEN)
         warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
         products = Product.objects.filter(warehouse_id=warehouse_id)
-        transaction = Transactions.objects.filter(warehouse_id=warehouse_id)
         total_price = products.aggregate(
             total=Sum(
                 ExpressionWrapper(
@@ -121,6 +121,50 @@ class AnaliticaListView(APIView):
                 )
             )
         )['total'] or 0
+        profit_price = total_price - base_price
+
+        return Response({
+            "total_price": total_price,
+            "base_price": base_price,
+            "profit_price": profit_price,
+        })
+
+
+@extend_schema(
+    tags=["analitica"], responses=AnaliticaSerializer
+)
+class Report(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        if user.role != User.RoleStatus.SUPERUSER:
+            return Response({'message': 'You are not the superuser'}, status=status.HTTP_403_FORBIDDEN)
+        warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
+        transaction = Transactions.objects.filter(warehouse_id=warehouse_id)
+
+        products = OrderItem.objects.filter(order__warehouse_id=warehouse_id)
+        total_price = products.aggregate(
+            total=Sum(
+                ExpressionWrapper(
+                    Case(
+                        When(product__discount_price__gt=0, then=F('product__discount_price')),
+                        default=F('product__price')
+                    ) * F('quantity'),
+                    output_field=DecimalField(max_digits=20, decimal_places=2)
+                )
+            )
+        )['total'] or Decimal('0.00')
+
+        base_price = products.aggregate(
+            total=Sum(
+                ExpressionWrapper(
+                    F('product__base_price') * F('quantity'),
+                    output_field=DecimalField(max_digits=20, decimal_places=2)
+                )
+            )
+        )['total'] or Decimal('0.00')
+
         transaction_price = transaction.aggregate(
             total=Sum(
                 Case(
@@ -130,6 +174,7 @@ class AnaliticaListView(APIView):
                 )
             )
         )['total'] or 0
+        transaction_price = Decimal(transaction_price)
         profit_price = total_price - base_price + transaction_price
 
         return Response({
@@ -144,7 +189,6 @@ class AnaliticaListView(APIView):
 class ReportListView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = None
-
 
     def get(self, request, *args, **kwargs):
         user = request.user
