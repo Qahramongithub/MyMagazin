@@ -61,10 +61,7 @@ class OrderSerializer(serializers.ModelSerializer):
         return order
 
 
-class OrderExelSerializer(serializers.ModelSerializer):
-    start_date = serializers.DateTimeField(source='created_at', read_only=True)
-    end_date = serializers.DateTimeField(source='created_at', read_only=True)
+class OrderExcelRequestSerializer(serializers.Serializer):
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
 
-    class Meta:
-        model = Order
-        fields = '__all__'

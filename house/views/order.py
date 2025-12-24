@@ -1,16 +1,13 @@
-from datetime import date
-
 from django.core.cache import cache
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView, GenericAPIView
+from rest_framework.generics import GenericAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from house.models import Order
-from house.serializers.order import OrderSerializer
+from house.serializers.order import OrderSerializer,OrderExcelRequestSerializer
 
 
 @extend_schema(
@@ -61,30 +58,15 @@ class OrderDeleteApiView(RetrieveAPIView):
         )
 
 @extend_schema(
-    parameters=[
-        OpenApiParameter(
-            name='start_date',
-            type=OpenApiTypes.DATE,
-            description='Boshlanish sanasi (YYYY-MM-DD)',
-            required=True,
-        ),
-        OpenApiParameter(
-            name='end_date',
-            type=OpenApiTypes.DATE,
-            description='Tugash sanasi (YYYY-MM-DD)',
-            required=True,
-        ),
-    ],
-    responses=OrderSerializer
-)
-@extend_schema(
     tags=['Order'],
+    request=OrderExcelRequestSerializer,
+    responses=OrderSerializer(many=True),
 )
 class OrderExel(GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = OrderSerializer
 
-    def get(self, request):
+    def post(self, request):
         user = request.user
         warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
 
@@ -94,24 +76,12 @@ class OrderExel(GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        start_date = request.query_params.get('start_date')
-        end_date = request.query_params.get('end_date')
+        # request body dan olish
+        req_serializer = OrderExcelRequestSerializer(data=request.data)
+        req_serializer.is_valid(raise_exception=True)
 
-        if not start_date or not end_date:
-            return Response(
-                {"detail": "start_date va end_date majburiy"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            start_date = date.fromisoformat(start_date)
-            end_date = date.fromisoformat(end_date)
-
-        except ValueError:
-            return Response(
-                {"detail": "Sana formati YYYY-MM-DD bo‘lishi kerak"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        start_date = req_serializer.validated_data['start_date']
+        end_date = req_serializer.validated_data['end_date']
 
         queryset = Order.objects.filter(
             warehouse_id=warehouse_id,
@@ -119,5 +89,4 @@ class OrderExel(GenericAPIView):
         )
 
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
+        return Response(serializer.data, status=status.HTTP_200_OK)
