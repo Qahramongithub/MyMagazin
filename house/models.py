@@ -28,11 +28,11 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
     discount_price = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity = models.FloatField(default=0)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     image = models.ImageField(upload_to='products/')
     unit = models.CharField(max_length=40, choices=Units.choices, default=Units.KG)
     created_at = models.DateTimeField(auto_now_add=True)
-    min_quantity = models.FloatField(default=0)
+    min_quantity = models.DecimalField(max_digits=10, decimal_places=2,default=0)
     description = models.TextField()
     warehouse = models.ForeignKey(
         'apps.Warehouse',
