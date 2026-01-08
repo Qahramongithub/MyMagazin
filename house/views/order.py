@@ -1,13 +1,17 @@
+import io
+
 from django.core.cache import cache
+from django.http import HttpResponse
 from drf_spectacular.utils import extend_schema
+from openpyxl import Workbook
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
 from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from house.models import Order
-from house.serializers.order import OrderSerializer,OrderExcelRequestSerializer
+from house.serializers.order import OrderSerializer, OrderExcelRequestSerializer
 
 
 @extend_schema(
@@ -57,14 +61,9 @@ class OrderDeleteApiView(RetrieveAPIView):
             status=status.HTTP_204_NO_CONTENT
         )
 
-@extend_schema(
-    tags=['Order'],
-    request=OrderExcelRequestSerializer,
-    responses=OrderSerializer(many=True),
-)
-class OrderExel(GenericAPIView):
+
+class OrderExcel(APIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = OrderSerializer
 
     def post(self, request):
         user = request.user
@@ -76,17 +75,59 @@ class OrderExel(GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # request body dan olish
         req_serializer = OrderExcelRequestSerializer(data=request.data)
         req_serializer.is_valid(raise_exception=True)
 
         start_date = req_serializer.validated_data['start_date']
         end_date = req_serializer.validated_data['end_date']
 
-        queryset = Order.objects.filter(
+        orders = Order.objects.filter(
             warehouse_id=warehouse_id,
             created_at__date__range=(start_date, end_date)
-        )
+        ).prefetch_related('orderitem_set__product')
 
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Buyurtmalar"
+
+        # Sana va vaqtni alohida ustunga ajratamiz
+        ws.append([
+            "Mahsulot nomi",
+            "Miqdori",
+            "Narxi",
+            "O‘lchov birligi",
+            "Jami summa",
+            "Sana",  # 2026-01-08
+            "Vaqt" # 21:54:33
+        ])
+
+        for order in orders:
+            # created_at dan sana va vaqtni ajratamiz
+            order_date = order.created_at.date()  # Faqat sana
+            order_time = order.created_at.time()  # Faqat vaqt
+
+            for item in order.orderitem_set.all():
+                ws.append([
+                    item.product.name,
+                    float(item.quantity),
+                    float(item.price),
+                    item.product.unit,
+                    float(item.quantity) * float(item.price),
+                    order_date,  # Sana
+                    order_time,  # Vaqt
+                ])
+
+        # BytesIO yordamida xotiraga saqlaymiz
+        excel_file = io.BytesIO()
+        wb.save(excel_file)
+        excel_file.seek(0)  # Fayl boshiga qaytamiz
+
+        response = HttpResponse(
+            excel_file.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="buyurtmalar.xlsx"'
+
+        excel_file.close()  # Resursni tozalaymiz
+
+        return response

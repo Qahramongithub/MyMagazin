@@ -5,7 +5,7 @@ from house.views.analitica import DailySaleListView, MonthlySaleListView, SaleLi
 from house.views.category import CategoryCreateApiView, CategoryListApiView, CategoryDeleteApiView, \
     CategoryUpdateApiView, CategorySearchApiView
 from house.views.exel import ProductExcelExportView
-from house.views.order import OrderListCreateAPIView, OrderExel
+from house.views.order import OrderListCreateAPIView, OrderExcel
 from house.views.product import ProductCreateApiView, ProductListApiView, FinishedProductListApiView, \
     LowProductListApiView, ProductUpdateApiView, ProductDeleteApiView, ProductSkuListApiView
 from house.views.transactions import TransactionCreateApiView, TransactionUpdateApiView, \
@@ -33,7 +33,7 @@ urlpatterns += [
 # ======================       Order ================================
 urlpatterns += [
     path('order/create', OrderListCreateAPIView.as_view()),
-    path('order/exel', OrderExel.as_view()),
+    path('order/exel', OrderExcel.as_view()),
 ]
 
 urlpatterns += [
