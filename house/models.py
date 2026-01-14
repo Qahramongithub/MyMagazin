@@ -77,7 +77,6 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.product.name} x {self.quantity} {self.product.unit}"
 
-
 class Order(models.Model):
     warehouse = models.ForeignKey('apps.Warehouse', on_delete=models.CASCADE, related_name='orders')
     created_at = models.DateTimeField(auto_now_add=True)

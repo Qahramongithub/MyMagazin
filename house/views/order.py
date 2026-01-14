@@ -64,6 +64,7 @@ class OrderDeleteApiView(RetrieveAPIView):
 
 class OrderExcel(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = OrderExcelRequestSerializer
 
     def post(self, request):
         user = request.user
@@ -98,7 +99,7 @@ class OrderExcel(APIView):
             "O‘lchov birligi",
             "Jami summa",
             "Sana",  # 2026-01-08
-            "Vaqt" # 21:54:33
+            "Vaqt"  # 21:54:33
         ])
 
         for order in orders:
