@@ -1,7 +1,8 @@
 from django.core.cache import cache  # Redis uchun
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView, UpdateAPIView, DestroyAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView, UpdateAPIView, DestroyAPIView, \
+    get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -136,3 +137,31 @@ class WarehouseEndApiView(APIView):
             "detail": "Sklad muvaffaqiyatli tanlandi",
             "warehouse": WarehouseSerializer(warehouse).data
         }, status=status.HTTP_200_OK)
+
+
+class WarehouseIdFilterApiView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, warehouse_id):
+        user = request.user
+        warehouse_id = warehouse_id
+        user_warehouse_id = cache.get(f"user_{user.id}_warehouse_id")
+        if not warehouse_id:
+            return Response(
+                {"error": "warehouse_id yuborilmadi"},
+                status=400
+            )
+        elif not user_warehouse_id or user_warehouse_id != warehouse_id:
+            return Response(
+                {"error": "warehouse_id userga tegishli emas"},
+                status=400
+            )
+
+        warehouse = get_object_or_404(
+            Warehouse,
+            id=warehouse_id,
+            user=user
+        )
+
+        serializer = WarehouseSerializer(warehouse)
+        return Response(serializer.data)

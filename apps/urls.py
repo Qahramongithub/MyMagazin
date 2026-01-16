@@ -12,7 +12,7 @@ from apps.views.user import Password, MyTokenObtainPairView
 from apps.views.warehouse import (
     WarehouseCreateApiView,
     WarehouseListApiView,
-    WarehouseDetailApiView, WarehouseDeleteApiView, WarehouseStartApiView, WarehouseEndApiView
+    WarehouseDetailApiView, WarehouseDeleteApiView, WarehouseStartApiView, WarehouseEndApiView, WarehouseIdFilterApiView
 )
 
 urlpatterns = [
@@ -29,6 +29,7 @@ urlpatterns += [
     # path('api/warehouse/detail/<int:pk>/', WarehouseDetailApiView.as_view(), name='warehouse_detail'),
     # path('api/warehouse/delete/<int:pk>/', WarehouseDeleteApiView.as_view(), name='warehouse_delete'),
     # path('api/warehouse/user/list', WarehouseListApiView.as_view(), name='warehouse_list'),
+    path('api/warehouse/id/<int:warehouse_id>', WarehouseIdFilterApiView.as_view(), name='warehouse_create'),
 ]
 urlpatterns += [
     path('api/warehouse/start', WarehouseStartApiView.as_view(), name='warehouse_start'),
