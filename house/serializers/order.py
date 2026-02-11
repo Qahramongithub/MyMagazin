@@ -1,13 +1,8 @@
-from decimal import Decimal
-
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-import telebot
 from house.models import Order, OrderItem
 from apps.models import Warehouse
-import os
-
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
@@ -59,6 +54,7 @@ class OrderSerializer(serializers.ModelSerializer):
             product.save(update_fields=['quantity'])
 
         return order
+
 
 
 class OrderExcelRequestSerializer(serializers.Serializer):

@@ -1,18 +1,15 @@
 from django.urls import path
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
     TokenBlacklistView
 )
 
-from apps.views.branch import BulkTransferAPIView, BranchListApiView
+from apps.views.branch import BulkTransferAPIView
 from apps.views.company import CompanyStatusAPIView
-from apps.views.language import ChangeLanguageAPIView
 from apps.views.user import Password, MyTokenObtainPairView
 from apps.views.warehouse import (
-    WarehouseCreateApiView,
     WarehouseListApiView,
-    WarehouseDetailApiView, WarehouseDeleteApiView, WarehouseStartApiView, WarehouseEndApiView, WarehouseIdFilterApiView
+    WarehouseStartApiView, WarehouseEndApiView, WarehouseIdFilterApiView
 )
 
 urlpatterns = [
@@ -44,7 +41,7 @@ urlpatterns += [
     # path('warehouse/list', BranchListApiView.as_view(), name='warehouse_list'),
 ]
 
-urlpatterns += [
-    path('api/change-language/', ChangeLanguageAPIView.as_view(), name='change-language'),
-
-]
+# urlpatterns += [
+#     path('api/change-language/', ChangeLanguageAPIView.as_view(), name='change-language'),
+#
+# ]

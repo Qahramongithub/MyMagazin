@@ -5,22 +5,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-n6b_hcns@!4-^7^_az2!b7au9&i^dfa-e#=-h4q%@#4p3m_bf&'
 
-DEBUG = False
+DEBUG = True
+ALLOWED_HOSTS = ['*']
 
-ALLOWED_HOSTS = ['156.67.27.60', 'localhost','web-post.uz','www.web-post.uz']
-CSRF_TRUSTED_ORIGINS = [
-    "https://web-post.uz",
-    "https://www.web-post.uz",
-    "http://localhost:5173",
-]
-
-CORS_ALLOW_ALL_ORIGINS = True
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = None
-SESSION_COOKIE_SAMESITE = None
-
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# ALLOWED_HOSTS = ['156.67.27.60', 'localhost','web-post.uz','www.web-post.uz']
+# CSRF_TRUSTED_ORIGINS = [
+#     "https://web-post.uz",
+#     "https://www.web-post.uz",
+#     "http://localhost:5173",
+# ]
+#
+# CORS_ALLOW_ALL_ORIGINS = True
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SAMESITE = None
+# SESSION_COOKIE_SAMESITE = None
+#
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 AUTH_USER_MODEL = 'apps.User'
 INSTALLED_APPS = [
@@ -45,8 +46,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -81,8 +82,8 @@ DATABASES = {
         'NAME': 'sklad',  # PostgreSQL'dagi bazangiz nomi
         'USER': 'postgres',  # Foydalanuvchi nomi
         'PASSWORD': '2505',  # Parol
-        'HOST': '156.67.27.60',  # Yoki Docker konteyner nomi (masalan: 'db')
-        'PORT': '5438',
+        'HOST': 'localhost',  # Yoki Docker konteyner nomi (masalan: 'db')
+        'PORT': '5432',
     }
 }
 
@@ -113,7 +114,8 @@ LANGUAGES = [
 LOCALE_PATHS = [
     BASE_DIR / 'locale',
 ]
-TIME_ZONE = 'UTC'
+# TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tashkent'
 
 USE_TZ = True
 PARLER_LANGUAGES = {
@@ -210,4 +212,3 @@ CACHES = {
         "TIMEOUT": None,
     }
 }
-

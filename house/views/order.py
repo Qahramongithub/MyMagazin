@@ -23,6 +23,7 @@ class OrderListCreateAPIView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
 
+
 class OrderDeleteApiView(RetrieveAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
@@ -103,7 +104,6 @@ class OrderExcel(APIView):
         ])
 
         for order in orders:
-            # created_at dan sana va vaqtni ajratamiz
             order_date = order.created_at.date()  # Faqat sana
             order_time = order.created_at.time()  # Faqat vaqt
 
@@ -118,10 +118,9 @@ class OrderExcel(APIView):
                     order_time,  # Vaqt
                 ])
 
-        # BytesIO yordamida xotiraga saqlaymiz
         excel_file = io.BytesIO()
         wb.save(excel_file)
-        excel_file.seek(0)  # Fayl boshiga qaytamiz
+        excel_file.seek(0)
 
         response = HttpResponse(
             excel_file.getvalue(),
